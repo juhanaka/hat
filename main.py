@@ -1,7 +1,9 @@
 import os
 import speech_recognition as sr
-import playsound
+from playsound import playsound
+from tempfile import NamedTemporaryFile
 from gtts import gTTS
+from io import BytesIO
 
 import openai
 from dotenv import load_dotenv
@@ -9,6 +11,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+INTERMEDIATE_AUDIO_FILE = "/tmp/intermediate.mp3"
 
 
 def get_completion(prompt, state=[]):
@@ -50,19 +54,26 @@ def get_audio():
     return said
 
 
+def save_intermediate_audio():
+    tts = gTTS("Hmmm.... Very well.", lang="en", tld="co.uk")
+    tts.save(INTERMEDIATE_AUDIO_FILE)
+
+
+def play_intermediate_audio():
+    playsound(INTERMEDIATE_AUDIO_FILE, block=False)
+
+
 def speak(text):
     print("tts")
-    tts = gTTS(text=text, lang="en")
-    print("save")
-    filename = "/tmp/voice.mp3"
-    tts.save(filename)
-    print("playsound")
-    playsound.playsound(filename)
+    gTTS(text=text, lang="en", tld="co.uk").write_to_fp(voice := NamedTemporaryFile())
+    playsound(voice.name)
+    voice.close()
 
 
 def main():
+    save_intermediate_audio()
     system_prompt = "You are the Sorting Hat at Hogwarts from Harry Potter."
-    initial_text = "You are the Sorting Hat at Hogwarts from Harry Potter. You should ask me two questions one by one and sort me into a house. You should first introduce yourself and ask me my name."
+    initial_text = "You are the Sorting Hat at Hogwarts from Harry Potter. You should ask me two questions one by one and sort me into a house. You should first introduce yourself and ask me my name. Please keep everything to one sentence."
     state = [{"role": "system", "content": system_prompt}]
     output, state = get_output(initial_text, state)
     while True:
@@ -70,7 +81,7 @@ def main():
         speak(output)
         print("getting audio")
         user_input = get_audio()
-        print("got audio")
+        play_intermediate_audio()
         output, state = get_output(user_input, state)
 
 
