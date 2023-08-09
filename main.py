@@ -1,6 +1,9 @@
 import os
+import time
 
 import openai
+from whisper_mic.whisper_mic import WhisperMic
+import torch
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -35,12 +38,19 @@ def is_restart(user_input):
 
 
 def main():
+    mic = WhisperMic(
+        model="small",
+        english=False,
+        device=("cuda" if torch.cuda.is_available() else "cpu"),
+    )
     system_prompt = "You are the Sorting Hat at Hogwarts from Harry Potter."
-    initial_text = "You are the Sorting Hat at Hogwarts from Harry Potter. You should ask me questions one by one and sort me into a house. You should first introduce yourself and ask me my name."
+    initial_text = "You are the Sorting Hat at Hogwarts from Harry Potter. You should ask me two questions one by one and sort me into a house. You should first introduce yourself and ask me my name."
     state = [{"role": "system", "content": system_prompt}]
     output, state = get_output(initial_text, state)
     while True:
-        user_input = prompt_for_input(output)
+        print("Sorting hat said: " + output)
+        user_input = mic.listen()
+        print("You said: " + user_input)
         output, state = get_output(user_input, state)
 
 
