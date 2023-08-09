@@ -48,7 +48,6 @@ def get_audio():
         said = ""
         try:
             said = r.recognize_google(audio)
-            print(said)
         except Exception as e:
             print("Exception: " + str(e))
     return said
@@ -64,7 +63,6 @@ def play_intermediate_audio():
 
 
 def speak(text):
-    print("tts")
     gTTS(text=text, lang="en", tld="co.uk").write_to_fp(voice := NamedTemporaryFile())
     playsound(voice.name)
     voice.close()
@@ -73,13 +71,11 @@ def speak(text):
 def main():
     save_intermediate_audio()
     system_prompt = "You are the Sorting Hat at Hogwarts from Harry Potter."
-    initial_text = "You are the Sorting Hat at Hogwarts from Harry Potter. You should ask me two questions one by one and sort me into a house. You should first introduce yourself and ask me my name. Please keep everything to one sentence."
+    initial_text = "You are the Sorting Hat at Hogwarts from Harry Potter. You should ask me two questions one by one and sort me into a house. You should first introduce yourself and ask me my name."
     state = [{"role": "system", "content": system_prompt}]
     output, state = get_output(initial_text, state)
     while True:
-        print("speaking")
         speak(output)
-        print("getting audio")
         user_input = get_audio()
         play_intermediate_audio()
         output, state = get_output(user_input, state)
